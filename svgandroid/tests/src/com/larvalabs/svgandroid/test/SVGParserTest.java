@@ -1,15 +1,13 @@
 package com.larvalabs.svgandroid.test;
 
-import android.content.res.AssetManager;
-import android.content.res.Resources;
-import android.graphics.Point;
-import android.test.AndroidTestCase;
-import android.view.Window;
 import com.larvalabs.svgandroid.SVG;
 import com.larvalabs.svgandroid.SVGParser;
 
+import android.content.res.AssetManager;
+import android.graphics.Point;
+import android.test.AndroidTestCase;
+
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Makes use of test svg images from http://www.w3.org/Graphics/SVG/Test/20061213/archives/W3C_SVG_11_BasicTestSuite.tar.gz to
@@ -45,7 +43,7 @@ public class SVGParserTest extends AndroidTestCase {
         assertTrue(pair.comparePointsOnHorizontalLine(229, 50));
         assertTrue(pair.comparePointsOnHorizontalLine(357, 50));
 
-        // Verify that the two images don't differ too much overall        
+        // Verify that the two images don't differ too much overall
         float diff = pair.fractionalDifference();
         System.out.println("Fractional difference between samples: " + diff);
         assertTrue(diff < 0.1);
@@ -87,4 +85,25 @@ public class SVGParserTest extends AndroidTestCase {
         assertTrue(diff < 0.1);
     }
 
+    /**
+     * This test file was provided by the svg-android-2 author, however it's
+     * unclear why exactly since it appears to fail even with that developer's
+     * svg-android modifications. Provided here for completeness, though looking
+     * at the SVG I'm not really sure that this would ever be something this
+     * library would need to support.
+     */
+    public void testInkscape() throws Exception {
+        AssetManager assets = getContext().getAssets();
+        SVG svg = SVGParser.getSVGFromAsset(assets, "svg/inkscape.svg");
+        SVGTestPair pair = new SVGTestPair(assets.open("png/inkscape.png"), svg, "inkscape");
+
+        assertTrue(pair.comparePointsOnHorizontalLine(35, 50));
+        assertTrue(pair.comparePointsOnHorizontalLine(62, 50));
+        assertTrue(pair.comparePointsOnHorizontalLine(111, 50));
+        assertTrue(pair.comparePointsOnHorizontalLine(142, 50));
+
+        float diff = pair.fractionalDifference();
+        System.out.println("Fractional difference between samples: " + diff);
+        assertTrue(diff < 0.1);
+    }
 }
