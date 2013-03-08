@@ -1,0 +1,8 @@
+bin
+gen
+.project
+.classpath
+.settings
+.pmd
+default.properties
+lint.xml
