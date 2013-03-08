@@ -15,31 +15,6 @@
 
 package com.larvalabs.svgandroid;
 
-import android.content.res.AssetManager;
-import android.content.res.Resources;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.DashPathEffect;
-import android.graphics.LinearGradient;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Paint.Align;
-import android.graphics.Path;
-import android.graphics.Picture;
-import android.graphics.RadialGradient;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.Shader;
-import android.graphics.Typeface;
-import android.text.TextUtils;
-import android.util.Log;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,6 +25,32 @@ import java.util.StringTokenizer;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Bitmap.Config;
+import android.graphics.Paint.Align;
+import android.graphics.Path;
+import android.graphics.Picture;
+import android.graphics.RadialGradient;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.Typeface;
+import android.util.Log;
 
 /*
 
@@ -193,6 +194,48 @@ public class SVGParser {
         SVG svg = getSVGFromInputStream(inputStream, searchColor, replaceColor);
         inputStream.close();
         return svg;
+    }
+
+    /**
+     * Parse SVG data from an Android application resource and render to Bitmap
+     *
+     * @param resources    the Android context
+     * @param resId        the ID of the raw resource SVG.
+     * @param searchColor  the color in the SVG to replace.
+     * @param replaceColor the color with which to replace the search color.
+
+     * @throws SVGParseException if there is an error while parsing.
+     */
+    public static Bitmap getBitmapSVGFromResource(Resources resources, int resId) throws SVGParseException {
+        return getBitmapSVGFromResource(resources, resId, 0, 0);
+    }
+
+    /**
+     * Parse SVG data from an Android application resource and render to Bitmap
+     *
+     * @param resources    the Android context
+     * @param resId        the ID of the raw resource SVG.
+     * @param searchColor  the color in the SVG to replace.
+     * @param replaceColor the color with which to replace the search color.
+
+     * @throws SVGParseException if there is an error while parsing.
+     */
+    public static Bitmap getBitmapSVGFromResource(Resources resources, int resId, int searchColor, int replaceColor) throws SVGParseException {
+        SVG svg = SVGParser.parse(resources.openRawResource(resId), searchColor, replaceColor, false);
+        RectF bounds = svg.getBounds();
+        if (bounds == null) {
+            throw new IllegalStateException("getBitmapSVGFromResource requires bounds to be set!");
+        } else {
+            int width = Math.round(bounds.width());
+            int height = Math.round(bounds.height());
+
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+            bitmap.setDensity(Bitmap.DENSITY_NONE);
+
+            new Canvas(bitmap).drawPicture(svg.getPicture(), bounds);
+
+            return bitmap;
+        }
     }
 
     /**
