@@ -50,6 +50,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 /*
@@ -226,13 +227,18 @@ public class SVGParser {
         if (bounds == null) {
             throw new IllegalStateException("getBitmapSVGFromResource requires bounds to be set!");
         } else {
-            int width = Math.round(bounds.width());
-            int height = Math.round(bounds.height());
+            DisplayMetrics displayMetrics = resources.getDisplayMetrics();
+            float density = displayMetrics.density;
+
+            int width = Math.round(bounds.width() * density);
+            int height = Math.round(bounds.height() * density);
 
             Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-            bitmap.setDensity(Bitmap.DENSITY_NONE);
+            bitmap.setDensity(displayMetrics.densityDpi);
 
-            new Canvas(bitmap).drawPicture(svg.getPicture(), bounds);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.scale(density, density);
+            canvas.drawPicture(svg.getPicture());
 
             return bitmap;
         }
