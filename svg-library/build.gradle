@@ -1,0 +1,47 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:0.7.+"
+    }
+}
+
+apply plugin: "android-library"
+apply plugin: "maven"
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            // repository(url: "file://" + LOCAL_REPO)
+            pom.groupId = "io.mercury"
+            pom.artifactId = "svg-android"
+            pom.version = "1.0-SNAPSHOT"
+            pom.packaging = "aar"
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "19"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_7
+        targetCompatibility = JavaVersion.VERSION_1_7
+    }
+
+    defaultConfig {
+        minSdkVersion 8
+        targetSdkVersion 19
+    }
+}
+
+dependencies {
+    compile "com.android.support:support-v4:19.0.0"
+}
