@@ -1,14 +1,12 @@
 bin
 gen
 .project
+.idea
 .classpath
 .settings
 .pmd
 default.properties
 lint.xml
-proguard/dump.txt
-proguard/seeds.txt
-proguard/usage.txt
 *.iml
 *.ipr
 *.iws
@@ -17,3 +15,7 @@ target
 out
 gen-external-apklibs
 classes
+com_crashlytics_export_strings.xml
+.gradle
+local.properties
+build
