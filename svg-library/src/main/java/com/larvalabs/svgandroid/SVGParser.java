@@ -1226,7 +1226,7 @@ public class SVGParser {
 
         private boolean hidden = false;
         private int hiddenLevel = 0;
-        private boolean boundsMode = false;
+        private int boundsMode = 0;
 
         private void doLimits(float x, float y) {
             if (x < limits.left) {
@@ -1279,7 +1279,7 @@ public class SVGParser {
             strokePaint.setAlpha(255);
             fillPaint.setAlpha(255);
             // Ignore everything but rectangles in bounds mode
-            if (boundsMode) {
+            if (boundsMode > 0) {
                 if (localName.equals("rect")) {
                     Float x = getFloatAttr("x", atts);
                     if (x == null) {
@@ -1293,7 +1293,9 @@ public class SVGParser {
                     Float height = getFloatAttr("height", atts);
                     bounds = new RectF(x, y, x + width, y + height);
                 }
-                return;
+                if (!localName.equals("g")) {
+                    return;
+                }
             }
             if (localName.equals("svg")) {
                 int width = (int) Math.ceil(getFloatAttr("width", atts));
@@ -1332,8 +1334,8 @@ public class SVGParser {
                 }
             } else if (localName.equals("g")) {
                 // Check to see if this is the "bounds" layer
-                if ("bounds".equalsIgnoreCase(getStringAttr("id", atts))) {
-                    boundsMode = true;
+                if ("bounds".equalsIgnoreCase(getStringAttr("id", atts)) || boundsMode > 0) {
+                    boundsMode++;
                 }
                 if (hidden) {
                     hiddenLevel++;
@@ -1601,8 +1603,8 @@ public class SVGParser {
                     gradientRefMap.put(gradient.id, gradient);
                 }
             } else if (localName.equals("g")) {
-                if (boundsMode) {
-                    boundsMode = false;
+                if (boundsMode > 0) {
+                    boundsMode--;
                 }
                 // Break out of hidden mode
                 if (hidden) {
