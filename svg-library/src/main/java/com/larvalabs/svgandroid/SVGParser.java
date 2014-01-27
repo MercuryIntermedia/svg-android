@@ -26,6 +26,7 @@ import java.util.StringTokenizer;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import android.util.SparseIntArray;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -202,9 +203,7 @@ public class SVGParser {
      *
      * @param resources    the Android context
      * @param resId        the ID of the raw resource SVG.
-     * @param searchColor  the color in the SVG to replace.
-     * @param replaceColor the color with which to replace the search color.
-
+     *
      * @throws SVGParseException if there is an error while parsing.
      */
     public static Bitmap getBitmapSVGFromResource(Resources resources, int resId) throws SVGParseException {
@@ -254,7 +253,18 @@ public class SVGParser {
         return doPath(pathString);
     }
 
-    private static SVG parse(InputStream in, Integer searchColor, Integer replaceColor, boolean whiteMode) throws SVGParseException {
+    protected static SVG parse(InputStream in, int searchColor, int replaceColor, boolean whiteMode) throws SVGParseException {
+        final SparseIntArray colorReplaceArray;
+        if (searchColor != 0 && replaceColor != 0) {
+            colorReplaceArray = new SparseIntArray();
+            colorReplaceArray.put(searchColor, replaceColor);
+        } else {
+            colorReplaceArray = null;
+        }
+        return parse(in, colorReplaceArray, whiteMode);
+    }
+
+    protected static SVG parse(InputStream in, SparseIntArray colorReplaceArray, boolean whiteMode) throws SVGParseException {
 //        Util.debug("Parsing SVG...");
         try {
             // long start = System.currentTimeMillis();
@@ -263,7 +273,7 @@ public class SVGParser {
             XMLReader xr = sp.getXMLReader();
             final Picture picture = new Picture();
             SVGHandler handler = new SVGHandler(picture);
-            handler.setColorSwap(searchColor, replaceColor);
+            handler.setColorSwap(colorReplaceArray);
             handler.setWhiteMode(whiteMode);
             xr.setContentHandler(handler);
             xr.parse(new InputSource(in));
@@ -950,8 +960,7 @@ public class SVGParser {
         RectF bounds = null;
         RectF limits = new RectF(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY);
 
-        Integer searchColor = null;
-        Integer replaceColor = null;
+        SparseIntArray colorReplaceArray = null;
 
         boolean whiteMode = false;
 
@@ -972,9 +981,8 @@ public class SVGParser {
             fillPaint.setStyle(Paint.Style.FILL);
         }
 
-        public void setColorSwap(Integer searchColor, Integer replaceColor) {
-            this.searchColor = searchColor;
-            this.replaceColor = replaceColor;
+        public void setColorSwap(SparseIntArray colorReplaceArray) {
+            this.colorReplaceArray = colorReplaceArray;
         }
 
         public void setWhiteMode(boolean whiteMode) {
@@ -1156,8 +1164,9 @@ public class SVGParser {
 
         private void doColor(Properties atts, Integer color, boolean fillMode, Paint paint) {
             int c = (0xFFFFFF & color) | 0xFF000000;
-            if (searchColor != null && searchColor.intValue() == c) {
-                c = replaceColor;
+            if (colorReplaceArray != null) {
+                int replaceColor = colorReplaceArray.get(c, 0);
+                if (replaceColor != 0) c = replaceColor;
             }
             paint.setColor(c);
             Float opacity = atts.getFloat("opacity");
