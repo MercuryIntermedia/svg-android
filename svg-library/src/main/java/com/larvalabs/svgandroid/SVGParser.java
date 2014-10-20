@@ -1325,16 +1325,22 @@ public class SVGParser {
                     hiddenLevel++;
                     //Util.debug("Hidden up: " + hiddenLevel);
                 }
+
+                boolean boundsLayer = "bounds".equalsIgnoreCase(getStringAttr("id", atts));
                 // Go in to hidden mode if display is "none"
                 // Legacy bounds layers are treated as hidden layers
-                if ("none".equals(getStringAttr("display", atts)) ||
-                    "bounds".equalsIgnoreCase(getStringAttr("id", atts))) {
+                if ("none".equals(getStringAttr("display", atts)) || boundsLayer) {
                     if (!hidden) {
                         hidden = true;
                         hiddenLevel = 1;
                         //Util.debug("Hidden up: " + hiddenLevel);
                     }
                 }
+                if (boundsLayer) {
+                    Log.w(TAG, "Encountered a layer with id=\"bounds\", which is no longer supported for declaring " +
+                               "the drawable region. Ignoring layer and using svg dimensions instead.");
+                }
+
                 pushTransform(atts); // sau
                 Properties props = new Properties(atts);
 
