@@ -223,24 +223,20 @@ public class SVGParser {
     public static Bitmap getBitmapSVGFromResource(Resources resources, int resId, int searchColor, int replaceColor) throws SVGParseException {
         SVG svg = SVGParser.parse(resources.openRawResource(resId), searchColor, replaceColor, false);
         RectF bounds = svg.getBounds();
-        if (bounds == null) {
-            throw new IllegalStateException("getBitmapSVGFromResource requires bounds to be set!");
-        } else {
-            DisplayMetrics displayMetrics = resources.getDisplayMetrics();
-            float density = displayMetrics.density;
+        DisplayMetrics displayMetrics = resources.getDisplayMetrics();
+        float density = displayMetrics.density;
 
-            int width = Math.round(bounds.width() * density);
-            int height = Math.round(bounds.height() * density);
+        int width = Math.round(bounds.width() * density);
+        int height = Math.round(bounds.height() * density);
 
-            Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-            bitmap.setDensity(displayMetrics.densityDpi);
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+        bitmap.setDensity(displayMetrics.densityDpi);
 
-            Canvas canvas = new Canvas(bitmap);
-            canvas.scale(density, density);
-            canvas.drawPicture(svg.getPicture());
+        Canvas canvas = new Canvas(bitmap);
+        canvas.scale(density, density);
+        canvas.drawPicture(svg.getPicture());
 
-            return bitmap;
-        }
+        return bitmap;
     }
 
     /**
@@ -1235,7 +1231,6 @@ public class SVGParser {
 
         private boolean hidden = false;
         private int hiddenLevel = 0;
-        private int boundsMode = 0;
 
         private void doLimits(float x, float y) {
             if (x < limits.left) {
@@ -1287,29 +1282,13 @@ public class SVGParser {
             // Reset paint opacity
             strokePaint.setAlpha(255);
             fillPaint.setAlpha(255);
-            // Ignore everything but rectangles in bounds mode
-            if (boundsMode > 0) {
-                if (localName.equals("rect")) {
-                    Float x = getFloatAttr("x", atts);
-                    if (x == null) {
-                        x = 0f;
-                    }
-                    Float y = getFloatAttr("y", atts);
-                    if (y == null) {
-                        y = 0f;
-                    }
-                    Float width = getFloatAttr("width", atts);
-                    Float height = getFloatAttr("height", atts);
-                    bounds = new RectF(x, y, x + width, y + height);
-                }
-                if (!localName.equals("g")) {
-                    return;
-                }
-            }
             if (localName.equals("svg")) {
-                int width = (int) Math.ceil(getFloatAttr("width", atts));
-                int height = (int) Math.ceil(getFloatAttr("height", atts));
-                canvas = picture.beginRecording(width, height);
+                float x = getFloatAttr("x", atts, 0f);
+                float y = getFloatAttr("x", atts, 0f);
+                float width = getFloatAttr("width", atts);
+                float height = getFloatAttr("height", atts);
+                bounds = new RectF(x, y, x + width, y + height);
+                canvas = picture.beginRecording((int) Math.ceil(width), (int) Math.ceil(height));
             } else if (localName.equals("defs")) {
                 // Ignore
             } else if (localName.equals("linearGradient")) {
@@ -1342,22 +1321,26 @@ public class SVGParser {
                     gradient.colors.add(color);
                 }
             } else if (localName.equals("g")) {
-                // Check to see if this is the "bounds" layer
-                if ("bounds".equalsIgnoreCase(getStringAttr("id", atts)) || boundsMode > 0) {
-                    boundsMode++;
-                }
                 if (hidden) {
                     hiddenLevel++;
                     //Util.debug("Hidden up: " + hiddenLevel);
                 }
+
+                boolean boundsLayer = "bounds".equalsIgnoreCase(getStringAttr("id", atts));
                 // Go in to hidden mode if display is "none"
-                if ("none".equals(getStringAttr("display", atts))) {
+                // Legacy bounds layers are treated as hidden layers
+                if ("none".equals(getStringAttr("display", atts)) || boundsLayer) {
                     if (!hidden) {
                         hidden = true;
                         hiddenLevel = 1;
                         //Util.debug("Hidden up: " + hiddenLevel);
                     }
                 }
+                if (boundsLayer) {
+                    Log.w(TAG, "Encountered a layer with id=\"bounds\", which is no longer supported for declaring " +
+                               "the drawable region. Ignoring layer and using svg dimensions instead.");
+                }
+
                 pushTransform(atts); // sau
                 Properties props = new Properties(atts);
 
@@ -1612,9 +1595,6 @@ public class SVGParser {
                     gradientRefMap.put(gradient.id, gradient);
                 }
             } else if (localName.equals("g")) {
-                if (boundsMode > 0) {
-                    boundsMode--;
-                }
                 // Break out of hidden mode
                 if (hidden) {
                     hiddenLevel--;
