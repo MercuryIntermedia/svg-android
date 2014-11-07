@@ -15,34 +15,16 @@
 
 package com.larvalabs.svgandroid;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Stack;
-import java.util.StringTokenizer;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import android.util.SparseIntArray;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.DefaultHandler;
-
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Bitmap.Config;
 import android.graphics.Paint.Align;
 import android.graphics.Path;
 import android.graphics.Picture;
@@ -53,6 +35,22 @@ import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.SparseIntArray;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Stack;
+import java.util.StringTokenizer;
 
 /*
 
@@ -1165,13 +1163,13 @@ public class SVGParser {
                 if (replaceColor != 0) c = replaceColor;
             }
             paint.setColor(c);
+
             Float opacity = atts.getFloat("opacity");
             if (opacity == null) {
                 opacity = atts.getFloat(fillMode ? "fill-opacity" : "stroke-opacity");
             }
-            if (opacity == null) {
-                paint.setAlpha(255);
-            } else {
+
+            if (opacity != null) {
                 paint.setAlpha((int) (255 * opacity));
             }
         }
@@ -1280,8 +1278,12 @@ public class SVGParser {
         public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
             // Log.d(TAG, localName + showAttributes(atts));
             // Reset paint opacity
-            strokePaint.setAlpha(255);
-            fillPaint.setAlpha(255);
+            if (!strokeSet) {
+                strokePaint.setAlpha(255);
+            }
+            if (!fillSet) {
+                fillPaint.setAlpha(255);
+            }
             if (localName.equals("svg")) {
                 float x = getFloatAttr("x", atts, 0f);
                 float y = getFloatAttr("x", atts, 0f);
