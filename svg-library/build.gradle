@@ -4,11 +4,11 @@ buildscript {
     }
 
     dependencies {
-        classpath "com.android.tools.build:gradle:0.7.+"
+        classpath "com.android.tools.build:gradle:0.14.+"
     }
 }
 
-apply plugin: "android-library"
+apply plugin: "com.android.library"
 apply plugin: "maven"
 
 uploadArchives {
@@ -29,7 +29,7 @@ repositories {
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19"
+    buildToolsVersion "19.1.0"
 
     defaultConfig {
         minSdkVersion 8
@@ -38,5 +38,5 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:19.0.0"
+    compile "com.android.support:support-v4:21.0.0"
 }
